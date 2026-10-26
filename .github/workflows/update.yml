@@ -1,0 +1,28 @@
+name: Update list
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Rebuild the list from the live catalog
+        run: node generate.mjs --only mcp --flat 1 --dir .
+      - name: Commit changes
+        run: |
+          git config user.name "pluginboard-bot"
+          git config user.email "bot@pluginboard.ai"
+          git add README.md
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Update list from Pluginboard"
+          git push
